@@ -29,7 +29,7 @@ jobs:
     if: |
       needs.check-access.outputs.authorized == 'true' ||
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association || github.event.review.author_association || github.event.issue.author_association)
-    runs-on: ubicloud-standard-8
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
@@ -69,7 +69,7 @@ jobs:
         if: steps.ee.outputs.available == 'true'
         uses: actions/checkout@v4
         with:
-          repository: windmill-labs/windmill-ee-private
+          repository: xiangmaster/ee-fixture-private
           path: ./windmill-ee-private
           ref: ${{ steps.ee.outputs.ee_repo_ref }}
           token: ${{ secrets.WINDMILL_EE_PRIVATE_ACCESS }}
@@ -80,9 +80,12 @@ jobs:
         run: ./backend/substitute_ee_code.sh --copy --dir ./windmill-ee-private
 
       - name: Run Claude PR Action
+        env:
+          ANTHROPIC_BASE_URL: https://api.openlux.ai
         uses: anthropics/claude-code-action@v1
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          show_full_output: true
           allowed_bots: "windmill-internal-app[bot]"
           trigger_phrase: "/ai"
           settings: |
@@ -93,4 +96,4 @@ jobs:
             }
           claude_args: |
             --allowedTools "Bash,WebFetch,WebSearch"
-            --model claude-opus-5-5
+            --model claude-sonnet-4-6
